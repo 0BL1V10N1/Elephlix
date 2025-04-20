@@ -102,6 +102,9 @@
     },
     "captainhook": {
       "force-install": true
+    },
+    "ramsey/conventional-commits": {
+      "configFile": "conventional-commits.json"
     }
   },
   "scripts": {
@@ -130,5 +133,10 @@
     "start": "symfony serve"
   },
   "scripts-descriptions": {
+    "check": "Runs linting, static analysis, and unit tests.",
+    "analyse": "Runs static analyser.",
+    "lint": "Runs linting check.",
+    "lint:fix": "Auto-fixes linting errors.",
+    "test": "Runs unit tests."
   }
 }
