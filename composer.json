@@ -48,11 +48,13 @@
     "twig/twig": "^2.12|^3.20"
   },
   "require-dev": {
+    "captainhook/captainhook": "^5.25.2",
     "friendsofphp/php-cs-fixer": "^3.75",
-    "phpstan/phpstan": "^2.1.11",
-    "phpstan/phpstan-doctrine": "^2.0",
-    "phpstan/phpstan-symfony": "^2.0",
+    "phpstan/phpstan": "^2.1.12",
+    "phpstan/phpstan-doctrine": "^2.0.2",
+    "phpstan/phpstan-symfony": "^2.0.4",
     "phpunit/phpunit": "^9.6.22",
+    "ramsey/conventional-commits": "^1.6",
     "symfony/browser-kit": "7.2.*",
     "symfony/css-selector": "7.2.*",
     "symfony/debug-bundle": "7.2.*",
@@ -60,15 +62,6 @@
     "symfony/phpunit-bridge": "^7.2",
     "symfony/stopwatch": "7.2.*",
     "symfony/web-profiler-bundle": "7.2.*"
-  },
-  "config": {
-    "allow-plugins": {
-      "php-http/discovery": true,
-      "symfony/flex": true,
-      "symfony/runtime": true
-    },
-    "bump-after-update": true,
-    "sort-packages": true
   },
   "autoload": {
     "psr-4": {
@@ -90,6 +83,27 @@
     "symfony/polyfill-php81": "*",
     "symfony/polyfill-php82": "*"
   },
+  "conflict": {
+    "symfony/symfony": "*"
+  },
+  "config": {
+    "allow-plugins": {
+      "php-http/discovery": true,
+      "symfony/flex": true,
+      "symfony/runtime": true
+    },
+    "bump-after-update": true,
+    "sort-packages": true
+  },
+  "extra": {
+    "symfony": {
+      "allow-contrib": false,
+      "require": "7.2.*"
+    },
+    "captainhook": {
+      "force-install": true
+    }
+  },
   "scripts": {
     "auto-scripts": {
       "cache:clear": "symfony-cmd",
@@ -97,23 +111,24 @@
       "importmap:install": "symfony-cmd"
     },
     "post-install-cmd": [
-      "@auto-scripts"
+      "@auto-scripts",
+      "captainhook install"
     ],
     "post-update-cmd": [
-      "@auto-scripts"
+      "@auto-scripts",
+      "captainhook install"
     ],
-    "test": "phpunit",
-    "lint": "phpstan analyse",
-    "format": "php-cs-fixer fix --dry-run",
-    "format:fix": "php-cs-fixer fix"
+    "check": [
+      "@analyse",
+      "@lint",
+      "@test"
+    ],
+    "analyse": "phpstan analyse",
+    "lint": "php-cs-fixer fix --dry-run",
+    "lint:fix": "php-cs-fixer fix",
+    "test": "phpunit --colors=always",
+    "start": "symfony serve"
   },
-  "conflict": {
-    "symfony/symfony": "*"
-  },
-  "extra": {
-    "symfony": {
-      "allow-contrib": false,
-      "require": "7.2.*"
-    }
+  "scripts-descriptions": {
   }
 }
