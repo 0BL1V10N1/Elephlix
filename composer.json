@@ -131,8 +131,7 @@
     "lint:fix": "php-cs-fixer fix --config=.php-cs-fixer.dist.php",
     "test": "phpunit --colors=always",
     "test:coverage:ci": "phpunit --colors=always --coverage-text --coverage-clover build/coverage/clover.xml --coverage-cobertura build/coverage/cobertura.xml --coverage-crap4j build/coverage/crap4j.xml --coverage-xml build/coverage/coverage-xml --log-junit build/junit.xml",
-    "test:coverage:html": "phpunit --colors=always --coverage-html build/coverage/coverage-html/",
-    "start": "symfony serve"
+    "test:coverage:html": "phpunit --colors=always --coverage-html build/coverage/coverage-html/"
   },
   "scripts-descriptions": {
     "check": "Runs linting, static analysis, and unit tests.",
@@ -141,7 +140,6 @@
     "lint:fix": "Auto-fixes linting errors.",
     "test:coverage:ci": "Runs unit tests and generates CI coverage reports.",
     "test:coverage:html": "Runs unit tests and generates HTML coverage report.",
-    "test": "Runs unit tests.",
-    "start": "Runs the server."
+    "test": "Runs unit tests."
   }
 }
