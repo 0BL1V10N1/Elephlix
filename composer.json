@@ -6,7 +6,7 @@
   "minimum-stability": "stable",
   "prefer-stable": true,
   "require": {
-    "php": ">=8.2 <8.4",
+    "php": ">=8.2",
     "ext-ctype": "*",
     "ext-iconv": "*",
     "doctrine/dbal": "^3.9.4",
@@ -126,10 +126,12 @@
       "@lint",
       "@test"
     ],
-    "analyse": "phpstan analyse",
-    "lint": "php-cs-fixer fix --dry-run",
-    "lint:fix": "php-cs-fixer fix",
+    "analyse": "phpstan analyse --ansi --memory-limit 256M",
+    "lint": "php-cs-fixer fix --diff --dry-run --config=.php-cs-fixer.dist.php",
+    "lint:fix": "php-cs-fixer fix --config=.php-cs-fixer.dist.php",
     "test": "phpunit --colors=always",
+    "test:coverage:ci": "phpunit --colors=always --coverage-text --coverage-clover build/coverage/clover.xml --coverage-cobertura build/coverage/cobertura.xml --coverage-crap4j build/coverage/crap4j.xml --coverage-xml build/coverage/coverage-xml --log-junit build/junit.xml",
+    "test:coverage:html": "phpunit --colors=always --coverage-html build/coverage/coverage-html/",
     "start": "symfony serve"
   },
   "scripts-descriptions": {
@@ -137,6 +139,9 @@
     "analyse": "Runs static analyser.",
     "lint": "Runs linting check.",
     "lint:fix": "Auto-fixes linting errors.",
-    "test": "Runs unit tests."
+    "test:coverage:ci": "Runs unit tests and generates CI coverage reports.",
+    "test:coverage:html": "Runs unit tests and generates HTML coverage report.",
+    "test": "Runs unit tests.",
+    "start": "Runs the server."
   }
 }
