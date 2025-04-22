@@ -29,7 +29,6 @@
     "symfony/translation": "7.2.*",
     "symfony/twig-bundle": "7.2.*",
     "symfony/validator": "7.2.*",
-    "symfony/web-link": "7.2.*",
     "symfony/yaml": "7.2.*",
     "twig/extra-bundle": "^2.12|^3.20",
     "twig/twig": "^2.12|^3.20"
@@ -123,8 +122,8 @@
     "analyse": "Runs static analyser.",
     "lint": "Runs linting check.",
     "lint:fix": "Auto-fixes linting errors.",
+    "test": "Runs unit tests.",
     "test:coverage:ci": "Runs unit tests and generates CI coverage reports.",
-    "test:coverage:html": "Runs unit tests and generates HTML coverage report.",
-    "test": "Runs unit tests."
+    "test:coverage:html": "Runs unit tests and generates HTML coverage report."
   }
 }
