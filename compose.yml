@@ -1,0 +1,18 @@
+name: elephlix
+
+services:
+  db:
+    image: postgres:14-alpine3.20
+    container_name: db
+    restart: unless-stopped
+    healthcheck:
+      test: [ "CMD", "pg_isready" ]
+      interval: 30s
+      timeout: 5s
+      retries: 5
+    environment:
+      POSTGRES_USER: root
+      POSTGRES_PASSWORD: root
+      POSTGRES_DB: elephlix
+    ports:
+      - "5432:5432"

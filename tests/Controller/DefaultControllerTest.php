@@ -9,7 +9,7 @@ final class DefaultControllerTest extends WebTestCase
     public function testIndex(): void
     {
         $client = self::createClient();
-        $client->request('GET', '/default');
+        $client->request('GET', '/');
 
         self::assertResponseIsSuccessful();
     }
