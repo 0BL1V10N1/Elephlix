@@ -15,9 +15,9 @@ Dockerfile
 LICENSE
 phpstan*
 phpunit*
+.php-cs-fixer*
 symfony.lock
 captainhook.json
 conventional-commits.json
-.php-cs-fixer.dist.php
 .gitattributes
 .gitignore
