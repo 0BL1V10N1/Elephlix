@@ -52,6 +52,9 @@
     "symfony/stopwatch": "7.2.*",
     "symfony/web-profiler-bundle": "7.2.*"
   },
+  "suggest": {
+    "sentry/sentry-symfony": "Sentry integration for error tracking."
+  },
   "autoload": {
     "psr-4": {
       "App\\": "src/"
