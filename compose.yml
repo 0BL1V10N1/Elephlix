@@ -1,0 +1,57 @@
+name: elephlix
+
+services:
+  php:
+    build:
+      context: .
+      dockerfile: .docker/php/Dockerfile
+    container_name: php
+    restart: on-failure:3
+    networks:
+      - elephlix
+    volumes:
+      - app:/app
+    env_file:
+      - .env.local
+    depends_on:
+      db:
+        condition: service_healthy
+
+  nginx:
+    build:
+      context: .
+      dockerfile: .docker/nginx/Dockerfile
+    container_name: nginx
+    restart: on-failure:3
+    networks:
+      - elephlix
+    volumes:
+      - app:/app
+    ports:
+      - "80:8000"
+    depends_on:
+      - php
+
+  db:
+    image: postgres:17-alpine3.20
+    container_name: db
+    restart: unless-stopped
+    networks:
+      - elephlix
+    healthcheck:
+      test: [ "CMD", "pg_isready", "-U", "root", "-d", "elephlix" ]
+      start_period: 5s
+      interval: 30s
+      timeout: 5s
+      retries: 5
+    environment:
+      POSTGRES_USER: root
+      POSTGRES_PASSWORD: root
+      POSTGRES_DB: elephlix
+
+volumes:
+  app:
+
+networks:
+  elephlix:
+    name: elephlix

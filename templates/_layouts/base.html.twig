@@ -1,0 +1,16 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="UTF-8">
+    <title>{{ title is defined ? title ~ ' - ' : '' }}Elephlix</title>
+    <link rel="icon" href="{{ asset('favicon.svg') }}" sizes="32x32">
+    {% block stylesheets %}
+    {% endblock %}
+
+    {% block javascripts %}
+    {% endblock %}
+</head>
+<body>
+{% block body %}{% endblock %}
+</body>
+</html>
