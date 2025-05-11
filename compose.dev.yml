@@ -1,0 +1,13 @@
+name: elephlix
+
+services:
+  db:
+    extends:
+      file: compose.yml
+      service: db
+    ports:
+      - "5432:5432"
+
+networks:
+  elephlix:
+    name: elephlix

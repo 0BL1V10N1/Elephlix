@@ -11,7 +11,8 @@ var/
 .env.*.local
 Dockerfile
 .dockerignore
-*compose.yml
+compose.yml
+compose.*.yml
 LICENSE
 phpstan*
 phpunit*
