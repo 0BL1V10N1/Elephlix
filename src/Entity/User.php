@@ -66,6 +66,12 @@ class User implements UserInterface, PasswordAuthenticatedUserInterface
     #[ORM\ManyToMany(targetEntity: self::class, mappedBy: 'follows')]
     private Collection $followers;
 
+    /**
+     * @var Collection<int, VideoReaction>
+     */
+    #[ORM\OneToMany(targetEntity: VideoReaction::class, mappedBy: 'reactor', orphanRemoval: true)]
+    private Collection $reactions;
+
     public function __construct()
     {
         $this->createdAt = new \DateTimeImmutable();
@@ -73,6 +79,7 @@ class User implements UserInterface, PasswordAuthenticatedUserInterface
         $this->comments = new ArrayCollection();
         $this->follows = new ArrayCollection();
         $this->followers = new ArrayCollection();
+        $this->reactions = new ArrayCollection();
     }
 
     public function getId(): ?int
@@ -268,6 +275,36 @@ class User implements UserInterface, PasswordAuthenticatedUserInterface
     {
         if ($this->followers->removeElement($follower)) {
             $follower->removeFollow($this);
+        }
+
+        return $this;
+    }
+
+    /**
+     * @return Collection<int, VideoReaction>
+     */
+    public function getReactions(): Collection
+    {
+        return $this->reactions;
+    }
+
+    public function addReaction(VideoReaction $reaction): static
+    {
+        if (!$this->reactions->contains($reaction)) {
+            $this->reactions->add($reaction);
+            $reaction->setReactor($this);
+        }
+
+        return $this;
+    }
+
+    public function removeReaction(VideoReaction $reaction): static
+    {
+        if ($this->reactions->removeElement($reaction)) {
+            // set the owning side to null (unless already changed)
+            if ($reaction->getReactor() === $this) {
+                $reaction->setReactor(null);
+            }
         }
 
         return $this;

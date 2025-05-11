@@ -23,25 +23,11 @@ class Video
     private ?string $title = null;
 
     #[ORM\Column(length: 255, unique: true)]
-    private ?string $slug;
+    private ?string $uuid;
 
     #[ORM\Column(type: Types::TEXT, nullable: true)]
     #[Assert\Length(min: 1, max: 50_000)]
     private ?string $description = null;
-
-    #[ORM\Column(length: 255)]
-    #[Assert\File(
-        maxSize: '4G',
-        mimeTypes: ['video/mp4', 'video/avi', 'video/mpeg', 'video/quicktime']
-    )]
-    private ?string $filename = null;
-
-    #[ORM\Column(length: 255, nullable: true)]
-    #[Assert\File(
-        maxSize: '100M',
-        mimeTypes: ['image/jpeg', 'image/png', 'image/webp']
-    )]
-    private ?string $thumbnail = null;
 
     #[ORM\Column]
     private int $views;
@@ -65,13 +51,20 @@ class Video
     #[ORM\OneToMany(targetEntity: Comment::class, mappedBy: 'video', orphanRemoval: true)]
     private Collection $comments;
 
+    /**
+     * @var Collection<int, VideoReaction>
+     */
+    #[ORM\OneToMany(targetEntity: VideoReaction::class, mappedBy: 'video', orphanRemoval: true)]
+    private Collection $reactions;
+
     public function __construct()
     {
         $this->uploadedAt = new \DateTimeImmutable();
         $this->tags = new ArrayCollection();
         $this->comments = new ArrayCollection();
-        $this->slug = Uuid::v4()->toBase58();
+        $this->uuid = Uuid::v4()->toBase58();
         $this->views = 0;
+        $this->reactions = new ArrayCollection();
     }
 
     public function getId(): ?int
@@ -91,9 +84,9 @@ class Video
         return $this;
     }
 
-    public function getSlug(): ?string
+    public function getUuid(): ?string
     {
-        return $this->slug;
+        return $this->uuid;
     }
 
     public function getDescription(): ?string
@@ -104,30 +97,6 @@ class Video
     public function setDescription(string $description): static
     {
         $this->description = $description;
-
-        return $this;
-    }
-
-    public function getFilename(): ?string
-    {
-        return $this->filename;
-    }
-
-    public function setFilename(string $filename): static
-    {
-        $this->filename = $filename;
-
-        return $this;
-    }
-
-    public function getThumbnail(): ?string
-    {
-        return $this->thumbnail;
-    }
-
-    public function setThumbnail(?string $thumbnail): static
-    {
-        $this->thumbnail = $thumbnail;
 
         return $this;
     }
@@ -212,6 +181,36 @@ class Video
             // set the owning side to null (unless already changed)
             if ($comment->getVideo() === $this) {
                 $comment->setVideo(null);
+            }
+        }
+
+        return $this;
+    }
+
+    /**
+     * @return Collection<int, VideoReaction>
+     */
+    public function getReactions(): Collection
+    {
+        return $this->reactions;
+    }
+
+    public function addReaction(VideoReaction $reaction): static
+    {
+        if (!$this->reactions->contains($reaction)) {
+            $this->reactions->add($reaction);
+            $reaction->setVideo($this);
+        }
+
+        return $this;
+    }
+
+    public function removeReaction(VideoReaction $reaction): static
+    {
+        if ($this->reactions->removeElement($reaction)) {
+            // set the owning side to null (unless already changed)
+            if ($reaction->getVideo() === $this) {
+                $reaction->setVideo(null);
             }
         }
 

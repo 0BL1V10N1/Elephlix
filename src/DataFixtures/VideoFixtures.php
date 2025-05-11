@@ -5,6 +5,8 @@ namespace App\DataFixtures;
 use App\Entity\Tag;
 use App\Entity\User;
 use App\Entity\Video;
+use App\Entity\VideoReaction;
+use App\Enum\ReactionType;
 use Doctrine\Bundle\FixturesBundle\Fixture;
 use Doctrine\Common\DataFixtures\DependentFixtureInterface;
 use Doctrine\Persistence\ObjectManager;
@@ -19,6 +21,7 @@ class VideoFixtures extends Fixture implements DependentFixtureInterface
 
         $this->loadVideos($manager, $faker);
         $this->loadTags($manager, $faker);
+        $this->loadReactions($manager);
     }
 
     public function loadVideos(ObjectManager $manager, Generator $faker): void
@@ -32,8 +35,6 @@ class VideoFixtures extends Fixture implements DependentFixtureInterface
 
             $video->setTitle($faker->sentence());
             $video->setDescription($faker->text());
-            $video->setFilename('video.mp4');
-            $video->setThumbnail('thumbnail.jpg');
             $video->incrementViews();
             $manager->persist($video);
 
@@ -50,9 +51,29 @@ class VideoFixtures extends Fixture implements DependentFixtureInterface
             /** @var Video $video */
             $video = $this->getReference("video-$i", Video::class);
 
-            $tag->setName($faker->word());
             $video->addtag($tag);
+
+            $tag->setName($faker->word());
             $manager->persist($tag);
+
+            $manager->flush();
+        }
+    }
+
+    public function loadReactions(ObjectManager $manager): void
+    {
+        for ($i = 1; $i <= 10; ++$i) {
+            $reaction = new VideoReaction();
+            /** @var Video $video */
+            $video = $this->getReference("video-$i", Video::class);
+            /** @var User $user */
+            $user = $this->getReference("user-$i", User::class);
+
+            $video->addReaction($reaction);
+            $user->addReaction($reaction);
+
+            $reaction->setType(ReactionType::LIKE);
+            $manager->persist($reaction);
 
             $manager->flush();
         }
