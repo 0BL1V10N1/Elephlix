@@ -1,0 +1,42 @@
+name: elephlix
+
+services:
+  db:
+    image: postgres:17-alpine3.20
+    container_name: db
+    restart: unless-stopped
+    networks:
+      - elephlix
+    healthcheck:
+      test: [ "CMD", "pg_isready", "-U", "root", "-d", "elephlix" ]
+      start_period: 5s
+      interval: 30s
+      timeout: 5s
+      retries: 5
+    environment:
+      POSTGRES_USER: root
+      POSTGRES_PASSWORD: root
+      POSTGRES_DB: elephlix
+    ports:
+      - "5432:5432"
+
+  redis:
+    image: redis:alpine
+    container_name: redis
+    restart: unless-stopped
+    command: sh -c 'redis-server --bind 0.0.0.0 --protected-mode no --requirepass $$REDIS_PASSWORD --save "" --appendonly no'
+    networks:
+      - elephlix
+    healthcheck:
+      test: [ "CMD-SHELL", "redis-cli -a $$REDIS_PASSWORD ping | grep PONG" ]
+      interval: 30s
+      timeout: 3s
+      retries: 5
+    environment:
+      - REDIS_PASSWORD=root
+    ports:
+      - '6379:6379'
+
+networks:
+  elephlix:
+    name: elephlix
