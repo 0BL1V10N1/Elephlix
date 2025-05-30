@@ -41,29 +41,51 @@ final class VideoController extends AbstractController
         // Increment views when loading the video page
         $video->incrementViews();
 
+        $this->em->flush();
+
         return $this->json($video, Response::HTTP_OK, [], ['groups' => ['video:detail']]);
     }
 
     #[Route('', name: 'create', methods: ['POST'])]
     public function create(Request $request): JsonResponse
     {
-        try {
-            $data = json_decode($request->getContent(), true, 512, \JSON_THROW_ON_ERROR);
-        } catch (\JsonException) {
-            return $this->json(['error' => 'Invalid JSON'], Response::HTTP_BAD_REQUEST);
+        $title = $request->request->get('title', '');
+        $description = $request->request->get('description', '');
+        $uploadedFile = $request->files->get('file');
+
+        if (!$uploadedFile) {
+            return $this->json(['error' => 'No video file provided'], Response::HTTP_BAD_REQUEST);
+        }
+
+        if ('video/mp4' !== $uploadedFile->getClientMimeType()) {
+            return $this->json(['error' => 'Only MP4 videos are allowed'], Response::HTTP_UNSUPPORTED_MEDIA_TYPE);
         }
 
         $video = new Video();
-        $video->setTitle($data['title'] ?? '');
-        $video->setDescription($data['description'] ?? '');
+        $video->setTitle($title);
+        $video->setDescription($description);
         $video->setAuthor($this->getUser());
 
         // Validation
         $errors = $this->validator->validate($video);
         if (\count($errors) > 0) {
-            $errorsString = (string) $errors;
+            $errorsArray = [];
+            foreach ($errors as $error) {
+                $errorsArray[$error->getPropertyPath()] = $error->getMessage();
+            }
 
-            return $this->json(['error' => $errorsString], Response::HTTP_BAD_REQUEST);
+            return $this->json(['errors' => $errorsArray], Response::HTTP_BAD_REQUEST);
+        }
+
+        $targetDir = $this->getParameter('videos_directory').'/'.$video->getSlug();
+        if (!is_dir($targetDir)) {
+            mkdir($targetDir, 0775, true);
+        }
+
+        try {
+            $uploadedFile->move($targetDir, 'video.mp4');
+        } catch (\Exception $e) {
+            return $this->json(['error' => 'Failed to upload video'], Response::HTTP_INTERNAL_SERVER_ERROR);
         }
 
         $this->em->persist($video);

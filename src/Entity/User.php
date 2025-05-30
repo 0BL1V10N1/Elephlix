@@ -19,36 +19,42 @@ class User implements UserInterface, PasswordAuthenticatedUserInterface
     #[ORM\Id]
     #[ORM\GeneratedValue]
     #[ORM\Column]
+    #[Groups(['user:read'])]
     private ?int $id = null;
 
-    #[Assert\NotBlank]
-    #[Assert\Email]
     #[ORM\Column(length: 255, unique: true)]
+    #[Assert\Email]
+    #[Groups(['user:read'])]
     private ?string $email = null;
 
     /**
      * @var ?string The hashed password
      */
-    #[Assert\NotBlank]
-    #[Assert\Length(min: 8, max: 255)]
     #[ORM\Column]
     private ?string $password = null;
 
-    #[Assert\NotBlank]
-    #[Assert\Length(min: 3, max: 255)]
+    /**
+     * @var ?string Assert password
+     */
+    #[Assert\Length(min: 6, max: 255)]
+    private ?string $plainPassword = null;
+
     #[ORM\Column(length: 255)]
-    #[Groups(['video:list', 'video:detail'])]
+    #[Assert\Length(min: 3, max: 255)]
+    #[Groups(['user:read', 'video:list', 'video:detail'])]
     private ?string $username = null;
 
     #[ORM\Column(length: 255, unique: true)]
     #[Assert\Regex(pattern: '/^@[A-Za-z0-9.]+$/')]
-    #[Groups(['video:list', 'video:detail'])]
+    #[Groups(['user:read', 'video:list', 'video:detail'])]
     private ?string $slug = null;
 
     #[ORM\Column(type: Types::TEXT, nullable: true)]
+    #[Assert\Length(min: 1, max: 65_535)]
     private ?string $description = null;
 
     #[ORM\Column]
+    #[Groups(['user:read'])]
     private ?\DateTimeImmutable $createdAt;
 
     /**
@@ -73,6 +79,7 @@ class User implements UserInterface, PasswordAuthenticatedUserInterface
      * @var Collection<int, self>
      */
     #[ORM\ManyToMany(targetEntity: self::class, mappedBy: 'follows')]
+    #[Groups(['video:detail'])]
     private Collection $followers;
 
     /**
@@ -122,6 +129,18 @@ class User implements UserInterface, PasswordAuthenticatedUserInterface
     public function setPassword(string $password): static
     {
         $this->password = $password;
+
+        return $this;
+    }
+
+    public function getPlainPassword(): ?string
+    {
+        return $this->plainPassword;
+    }
+
+    public function setPlainPassword(string $plainPassword): static
+    {
+        $this->plainPassword = $plainPassword;
 
         return $this;
     }

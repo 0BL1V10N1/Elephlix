@@ -17,10 +17,11 @@ class Video
     #[ORM\Id]
     #[ORM\GeneratedValue]
     #[ORM\Column]
+    #[Groups(['video:list', 'video:detail'])]
     private ?int $id = null;
 
     #[ORM\Column(length: 255)]
-    #[Assert\Length(min: 1, max: 100)]
+    #[Assert\Length(min: 6, max: 100)]
     #[Groups(['video:list', 'video:detail'])]
     private ?string $title = null;
 
@@ -29,7 +30,7 @@ class Video
     private ?string $slug;
 
     #[ORM\Column(type: Types::TEXT, nullable: true)]
-    #[Assert\Length(min: 1, max: 50_000)]
+    #[Assert\Length(min: 10, max: 500)]
     #[Groups(['video:detail'])]
     private ?string $description = null;
 

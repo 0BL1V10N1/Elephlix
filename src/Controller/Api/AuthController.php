@@ -14,22 +14,17 @@ use Symfony\Component\PasswordHasher\Hasher\UserPasswordHasherInterface;
 use Symfony\Component\Routing\Annotation\Route;
 use Symfony\Component\Security\Core\Exception\AuthenticationException;
 use Symfony\Component\Security\Core\User\UserProviderInterface;
+use Symfony\Component\Validator\Validator\ValidatorInterface;
 
 #[Route('/auth', name: 'api_auth_')]
 final class AuthController extends AbstractController
 {
-    private UserProviderInterface $userProvider;
-    private UserPasswordHasherInterface $passwordHasher;
-    private JWTTokenManagerInterface $jwtManager;
-
     public function __construct(
-        UserProviderInterface $userProvider,
-        UserPasswordHasherInterface $passwordHasher,
-        JWTTokenManagerInterface $jwtManager,
+        private readonly UserProviderInterface $userProvider,
+        private readonly UserPasswordHasherInterface $passwordHasher,
+        private readonly JWTTokenManagerInterface $jwtManager,
+        private readonly ValidatorInterface $validator,
     ) {
-        $this->userProvider = $userProvider;
-        $this->passwordHasher = $passwordHasher;
-        $this->jwtManager = $jwtManager;
     }
 
     #[Route('/login', name: 'login', methods: ['POST'])]
@@ -54,15 +49,7 @@ final class AuthController extends AbstractController
 
             $token = $this->jwtManager->create($user);
 
-            return $this->json([
-                'token' => $token,
-                'user' => [
-                    'id' => $user->getId(),
-                    'email' => $user->getEmail(),
-                    'username' => $user->getUsername(),
-                    'slug' => $user->getSlug(),
-                ],
-            ], Response::HTTP_OK);
+            return $this->json(['token' => $token, 'user' => $user], Response::HTTP_OK, [], ['groups' => ['user:read']]);
         } catch (AuthenticationException $e) {
             return $this->json(['error' => 'Invalid credentials'], Response::HTTP_UNAUTHORIZED);
         } catch (\Exception $e) {
@@ -93,7 +80,17 @@ final class AuthController extends AbstractController
         $user = new User();
         $user->setEmail($email);
         $user->setUsername($username);
-        $user->setSlug('@'.strtolower($username));
+        $user->setSlug($username);
+        $user->setPlainPassword($password);
+
+        // Validation
+        $errors = $this->validator->validate($user);
+        if (\count($errors) > 0) {
+            $errorsString = (string) $errors;
+
+            return $this->json(['error' => $errorsString], Response::HTTP_BAD_REQUEST);
+        }
+
         $user->setPassword($this->passwordHasher->hashPassword($user, $password));
 
         $em->persist($user);
@@ -101,15 +98,7 @@ final class AuthController extends AbstractController
 
         $token = $this->jwtManager->create($user);
 
-        return $this->json([
-            'token' => $token,
-            'user' => [
-                'id' => $user->getId(),
-                'email' => $user->getEmail(),
-                'username' => $user->getUsername(),
-                'slug' => $user->getSlug(),
-            ],
-        ], Response::HTTP_CREATED);
+        return $this->json(['token' => $token, 'user' => $user], Response::HTTP_CREATED, [], ['groups' => ['user:read']]);
     }
 
     #[Route('/me', name: 'me', methods: ['GET'])]
@@ -118,11 +107,6 @@ final class AuthController extends AbstractController
         /** @var User $user */
         $user = $this->getUser();
 
-        return $this->json([
-            'id' => $user->getId(),
-            'email' => $user->getEmail(),
-            'username' => $user->getUsername(),
-            'slug' => $user->getSlug(),
-        ]);
+        return $this->json($user, Response::HTTP_OK, [], ['groups' => ['user:read']]);
     }
 }
