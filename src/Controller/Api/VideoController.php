@@ -2,6 +2,8 @@
 
 namespace App\Controller\Api;
 
+use App\Entity\Comment;
+use App\Entity\User;
 use App\Entity\Video;
 use App\Repository\VideoRepository;
 use Doctrine\ORM\EntityManagerInterface;
@@ -52,19 +54,17 @@ final class VideoController extends AbstractController
         $title = $request->request->get('title', '');
         $description = $request->request->get('description', '');
         $uploadedFile = $request->files->get('file');
-
-        if (!$uploadedFile) {
-            return $this->json(['error' => 'No video file provided'], Response::HTTP_BAD_REQUEST);
-        }
-
-        if ('video/mp4' !== $uploadedFile->getClientMimeType()) {
-            return $this->json(['error' => 'Only MP4 videos are allowed'], Response::HTTP_UNSUPPORTED_MEDIA_TYPE);
-        }
+        $thumbnail = $request->files->get('thumbnail');
 
         $video = new Video();
         $video->setTitle($title);
         $video->setDescription($description);
+        $video->setVideoFile($uploadedFile);
         $video->setAuthor($this->getUser());
+
+        if ($thumbnail) {
+            $video->setThumbnail($thumbnail);
+        }
 
         // Validation
         $errors = $this->validator->validate($video);
@@ -77,7 +77,7 @@ final class VideoController extends AbstractController
             return $this->json(['errors' => $errorsArray], Response::HTTP_BAD_REQUEST);
         }
 
-        $targetDir = $this->getParameter('videos_directory').'/'.$video->getSlug();
+        $targetDir = $this->getParameter('uploads_directory').'/'.$video->getSlug();
         if (!is_dir($targetDir)) {
             mkdir($targetDir, 0775, true);
         }
@@ -86,6 +86,34 @@ final class VideoController extends AbstractController
             $uploadedFile->move($targetDir, 'video.mp4');
         } catch (\Exception $e) {
             return $this->json(['error' => 'Failed to upload video'], Response::HTTP_INTERNAL_SERVER_ERROR);
+        }
+
+        if ($thumbnail) {
+            $mime = $thumbnail->getClientMimeType();
+
+            switch ($mime) {
+                case 'image/jpeg':
+                    $image = imagecreatefromjpeg($thumbnail->getPathname());
+                    break;
+                case 'image/png':
+                    $image = imagecreatefrompng($thumbnail->getPathname());
+                    break;
+                case 'image/webp':
+                    $image = imagecreatefromwebp($thumbnail->getPathname());
+                    break;
+                default:
+                    return $this->json(['error' => 'Unsupported image type for thumbnail'], Response::HTTP_UNSUPPORTED_MEDIA_TYPE);
+            }
+
+            if (!$image) {
+                return $this->json(['error' => 'Failed to process thumbnail'], Response::HTTP_INTERNAL_SERVER_ERROR);
+            }
+
+            imagejpeg($image, $targetDir.'/thumbnail.jpg', 85);
+            imagedestroy($image);
+        } else {
+            $defaultThumbnail = $this->getParameter('assets_directory').'/default_thumbnail.jpg';
+            copy($defaultThumbnail, $targetDir.'/thumbnail.jpg');
         }
 
         $this->em->persist($video);
@@ -97,14 +125,56 @@ final class VideoController extends AbstractController
     #[Route('/{slug}', name: 'delete', methods: ['DELETE'])]
     public function delete(string $slug): JsonResponse
     {
+        /** @var User $user */
+        $user = $this->getUser();
+
         $video = $this->videoRepository->findOneBy(['slug' => $slug]);
         if (!$video) {
             return $this->json(['error' => 'Video not found'], Response::HTTP_NOT_FOUND);
         }
 
-        $this->em->remove($video);
+        if ($video->getAuthor() !== $user) {
+            return $this->json(['error' => 'Unauthorized'], Response::HTTP_FORBIDDEN);
+        }
+
+        $user->removeVideo($video);
         $this->em->flush();
 
         return $this->json(null, Response::HTTP_NO_CONTENT);
+    }
+
+    #[Route('/{slug}/comments', name: 'comment_create', methods: ['POST'])]
+    public function addComment(string $slug, Request $request): JsonResponse
+    {
+        /** @var User $user */
+        $user = $this->getUser();
+
+        $video = $this->videoRepository->findOneBy(['slug' => $slug]);
+        if (!$video) {
+            return $this->json(['error' => 'Video not found'], Response::HTTP_NOT_FOUND);
+        }
+
+        $content = $request->request->get('content', '');
+
+        $comment = new Comment();
+        $comment->setContent($content);
+        $comment->setAuthor($user);
+        $comment->setVideo($video);
+
+        // Validation
+        $errors = $this->validator->validate($comment);
+        if (\count($errors) > 0) {
+            $errorsArray = [];
+            foreach ($errors as $error) {
+                $errorsArray[$error->getPropertyPath()] = $error->getMessage();
+            }
+
+            return $this->json(['errors' => $errorsArray], Response::HTTP_BAD_REQUEST);
+        }
+
+        $this->em->persist($comment);
+        $this->em->flush();
+
+        return $this->json($comment, Response::HTTP_CREATED, [], ['groups' => ['video:detail']]);
     }
 }

@@ -19,7 +19,7 @@ class User implements UserInterface, PasswordAuthenticatedUserInterface
     #[ORM\Id]
     #[ORM\GeneratedValue]
     #[ORM\Column]
-    #[Groups(['user:read'])]
+    #[Groups(['user:read', 'video:list', 'video:detail'])]
     private ?int $id = null;
 
     #[ORM\Column(length: 255, unique: true)]
@@ -168,6 +168,7 @@ class User implements UserInterface, PasswordAuthenticatedUserInterface
 
     public function setSlug(string $slug): void
     {
+        $slug = str_replace(' ', '', $slug);
         if (!str_starts_with($slug, '@')) {
             $slug = '@'.$slug;
         }

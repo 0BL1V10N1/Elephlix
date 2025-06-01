@@ -7,6 +7,7 @@ use Doctrine\Common\Collections\ArrayCollection;
 use Doctrine\Common\Collections\Collection;
 use Doctrine\DBAL\Types\Types;
 use Doctrine\ORM\Mapping as ORM;
+use Symfony\Component\HttpFoundation\File\File;
 use Symfony\Component\Serializer\Attribute\Groups;
 use Symfony\Component\Uid\Uuid;
 use Symfony\Component\Validator\Constraints as Assert;
@@ -33,6 +34,12 @@ class Video
     #[Assert\Length(min: 10, max: 500)]
     #[Groups(['video:detail'])]
     private ?string $description = null;
+
+    #[Assert\File(maxSize: '256M', mimeTypes: ['video/mp4'])]
+    private ?File $videoFile = null;
+
+    #[Assert\File(maxSize: '4M', mimeTypes: ['image/jpeg', 'image/png', 'image/webp'])]
+    private ?File $thumbnail = null;
 
     #[ORM\Column]
     #[Groups(['video:list', 'video:detail'])]
@@ -110,6 +117,26 @@ class Video
         $this->description = $description;
 
         return $this;
+    }
+
+    public function getVideoFile(): ?File
+    {
+        return $this->videoFile;
+    }
+
+    public function setVideoFile(?File $videoFile): void
+    {
+        $this->videoFile = $videoFile;
+    }
+
+    public function getThumbnail(): ?File
+    {
+        return $this->thumbnail;
+    }
+
+    public function setThumbnail(?File $thumbnail): void
+    {
+        $this->thumbnail = $thumbnail;
     }
 
     public function getViews(): int
